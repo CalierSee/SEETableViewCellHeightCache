@@ -25,41 +25,41 @@ static void * isCacheKey = @"isCache";
 
 #pragma mark public method
 
-    - (void)cacheEnabled:(BOOL)enabled {
-        if ([self isCache] == enabled) return;
-        [self setIsCache:enabled];
-        //move
-        Method m1 = class_getInstanceMethod([self class], @selector(moveRowAtIndexPath:toIndexPath:));
-        Method m2 = class_getInstanceMethod([self class], @selector(see_moveRowAtIndexPath:toIndexPath:));
-        method_exchangeImplementations(m1, m2);
-        m1 = class_getInstanceMethod([self class], @selector(moveSection:toSection:));
-        m2 = class_getInstanceMethod([self class], @selector(see_moveSection:toSection:));
-        method_exchangeImplementations(m1, m2);
-        //delete
-        m1 = class_getInstanceMethod([self class], @selector(deleteSections:withRowAnimation:));
-        m2 = class_getInstanceMethod([self class], @selector(see_deleteSections:withRowAnimation:));
-        method_exchangeImplementations(m1, m2);
-        m1 = class_getInstanceMethod([self class], @selector(deleteRowsAtIndexPaths:withRowAnimation:));
-        m2 = class_getInstanceMethod([self class], @selector(see_deleteRowsAtIndexPaths:withRowAnimation:));
-        method_exchangeImplementations(m1, m2);
-        //insert
-        m1 = class_getInstanceMethod([self class], @selector(insertRowsAtIndexPaths:withRowAnimation:));
-        m2 = class_getInstanceMethod([self class], @selector(see_insertRowsAtIndexPaths:withRowAnimation:));
-        method_exchangeImplementations(m1, m2);
-        m1 = class_getInstanceMethod([self class], @selector(insertSections:withRowAnimation:));
-        m2 = class_getInstanceMethod([self class], @selector(see_insertSections:withRowAnimation:));
-        method_exchangeImplementations(m1, m2);
-        //reload
-        m1 = class_getInstanceMethod([self class], @selector(reloadSections:withRowAnimation:));
-        m2 = class_getInstanceMethod([self class], @selector(see_reloadSections:withRowAnimation:));
-        method_exchangeImplementations(m1, m2);
-        m1 = class_getInstanceMethod([self class], @selector(reloadRowsAtIndexPaths:withRowAnimation:));
-        m2 = class_getInstanceMethod([self class], @selector(see_reloadRowsAtIndexPaths:withRowAnimation:));
-        method_exchangeImplementations(m1, m2);
-        m1 = class_getInstanceMethod([self class], @selector(reloadData));
-        m2 = class_getInstanceMethod([self class], @selector(see_reloadData));
-        method_exchangeImplementations(m1, m2);
-    }
+- (void)cacheEnabled:(BOOL)enabled {
+    if ([self isCache] == enabled) return;
+    [self setIsCache:enabled];
+    //move
+    Method m1 = class_getInstanceMethod([self class], @selector(moveRowAtIndexPath:toIndexPath:));
+    Method m2 = class_getInstanceMethod([self class], @selector(see_moveRowAtIndexPath:toIndexPath:));
+    method_exchangeImplementations(m1, m2);
+    m1 = class_getInstanceMethod([self class], @selector(moveSection:toSection:));
+    m2 = class_getInstanceMethod([self class], @selector(see_moveSection:toSection:));
+    method_exchangeImplementations(m1, m2);
+    //delete
+    m1 = class_getInstanceMethod([self class], @selector(deleteSections:withRowAnimation:));
+    m2 = class_getInstanceMethod([self class], @selector(see_deleteSections:withRowAnimation:));
+    method_exchangeImplementations(m1, m2);
+    m1 = class_getInstanceMethod([self class], @selector(deleteRowsAtIndexPaths:withRowAnimation:));
+    m2 = class_getInstanceMethod([self class], @selector(see_deleteRowsAtIndexPaths:withRowAnimation:));
+    method_exchangeImplementations(m1, m2);
+    //insert
+    m1 = class_getInstanceMethod([self class], @selector(insertRowsAtIndexPaths:withRowAnimation:));
+    m2 = class_getInstanceMethod([self class], @selector(see_insertRowsAtIndexPaths:withRowAnimation:));
+    method_exchangeImplementations(m1, m2);
+    m1 = class_getInstanceMethod([self class], @selector(insertSections:withRowAnimation:));
+    m2 = class_getInstanceMethod([self class], @selector(see_insertSections:withRowAnimation:));
+    method_exchangeImplementations(m1, m2);
+    //reload
+    m1 = class_getInstanceMethod([self class], @selector(reloadSections:withRowAnimation:));
+    m2 = class_getInstanceMethod([self class], @selector(see_reloadSections:withRowAnimation:));
+    method_exchangeImplementations(m1, m2);
+    m1 = class_getInstanceMethod([self class], @selector(reloadRowsAtIndexPaths:withRowAnimation:));
+    m2 = class_getInstanceMethod([self class], @selector(see_reloadRowsAtIndexPaths:withRowAnimation:));
+    method_exchangeImplementations(m1, m2);
+    m1 = class_getInstanceMethod([self class], @selector(reloadData));
+    m2 = class_getInstanceMethod([self class], @selector(see_reloadData));
+    method_exchangeImplementations(m1, m2);
+}
 
 
 - (CGFloat)heightForCellWithIdentifier:(NSString *)identifier indexPath:(NSIndexPath *)indexPath configuration:(void (^)(__kindof UITableViewCell *))configuration {
@@ -144,84 +144,104 @@ static void * isCacheKey = @"isCache";
     return cell;
 }
 
-    - (void)see_insertSections:(NSIndexSet *)sections withRowAnimation:(UITableViewRowAnimation)animation {
-        [sections enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.heightCache insertSection:idx];
-        }];
-        [self see_insertSections:sections withRowAnimation:animation];
-    }
+- (void)see_insertSections:(NSIndexSet *)sections withRowAnimation:(UITableViewRowAnimation)animation {
+    [sections enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.heightCache insertSection:idx];
+    }];
+    [self see_insertSections:sections withRowAnimation:animation];
+}
 
-    - (void)see_insertRowsAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths withRowAnimation:(UITableViewRowAnimation)animation {
-        [indexPaths enumerateObjectsUsingBlock:^(NSIndexPath * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.heightCache insertRow:obj.row inSection:obj.section];
-        }];
-        [self see_insertRowsAtIndexPaths:indexPaths withRowAnimation:animation];
-    }
-
-    - (void)see_deleteSections:(NSIndexSet *)sections withRowAnimation:(UITableViewRowAnimation)animation {
-        //倒序删除对应section
-        [sections enumerateIndexesWithOptions:NSEnumerationReverse usingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.heightCache deleteSection:idx];
-        }];
-        [self see_deleteSections:sections withRowAnimation:animation];
-    }
-
-    - (void)see_deleteRowsAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths withRowAnimation:(UITableViewRowAnimation)animation {
-        //对indexPath进行升序排序
-        NSArray * sortResult = [indexPaths sortedArrayUsingComparator:^NSComparisonResult(NSIndexPath *  _Nonnull obj1, NSIndexPath *  _Nonnull obj2) {
-            if (obj1.section == obj2.section) {
-                if (obj1.row == obj2.row) {
-                    return NSOrderedSame;
-                }
-                else if (obj1.row > obj2.row) {
-                    return NSOrderedDescending;
-                }
-                else {
-                    return NSOrderedAscending;
-                }
+- (void)see_insertRowsAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths withRowAnimation:(UITableViewRowAnimation)animation {
+    //对indexPath进行升序排序
+    NSArray * sortResult = [indexPaths sortedArrayUsingComparator:^NSComparisonResult(NSIndexPath *  _Nonnull obj1, NSIndexPath *  _Nonnull obj2) {
+        if (obj1.section == obj2.section) {
+            if (obj1.row == obj2.row) {
+                return NSOrderedSame;
             }
-            else if (obj1.section > obj2.section) {
+            else if (obj1.row > obj2.row) {
                 return NSOrderedDescending;
             }
             else {
                 return NSOrderedAscending;
             }
-        }];
-        //倒序删除对应indexPath数据
-        [sortResult enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSIndexPath *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.heightCache deleteRow:obj.row inSection:obj.section];
-        }];
-        [self see_deleteRowsAtIndexPaths:indexPaths withRowAnimation:animation];
-    }
+        }
+        else if (obj1.section > obj2.section) {
+            return NSOrderedDescending;
+        }
+        else {
+            return NSOrderedAscending;
+        }
+    }];
+    [sortResult enumerateObjectsUsingBlock:^(NSIndexPath * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.heightCache insertRow:obj.row inSection:obj.section];
+    }];
+    [self see_insertRowsAtIndexPaths:indexPaths withRowAnimation:animation];
+}
 
-    - (void)see_reloadRowsAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths withRowAnimation:(UITableViewRowAnimation)animation {
-        [indexPaths enumerateObjectsUsingBlock:^(NSIndexPath * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.heightCache reloadRow:obj.row inSection:obj.section];
-        }];
-        [self see_reloadRowsAtIndexPaths:indexPaths withRowAnimation:animation];
-    }
+- (void)see_deleteSections:(NSIndexSet *)sections withRowAnimation:(UITableViewRowAnimation)animation {
+    //倒序删除对应section
+    [sections enumerateIndexesWithOptions:NSEnumerationReverse usingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.heightCache deleteSection:idx];
+    }];
+    [self see_deleteSections:sections withRowAnimation:animation];
+}
 
-    - (void)see_reloadSections:(NSIndexSet *)sections withRowAnimation:(UITableViewRowAnimation)animation {
-        [sections enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.heightCache reloadSection:idx];
-        }];
-        [self see_reloadSections:sections withRowAnimation:animation];
-    }
+- (void)see_deleteRowsAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths withRowAnimation:(UITableViewRowAnimation)animation {
+    //对indexPath进行升序排序
+    NSArray * sortResult = [indexPaths sortedArrayUsingComparator:^NSComparisonResult(NSIndexPath *  _Nonnull obj1, NSIndexPath *  _Nonnull obj2) {
+        if (obj1.section == obj2.section) {
+            if (obj1.row == obj2.row) {
+                return NSOrderedSame;
+            }
+            else if (obj1.row > obj2.row) {
+                return NSOrderedDescending;
+            }
+            else {
+                return NSOrderedAscending;
+            }
+        }
+        else if (obj1.section > obj2.section) {
+            return NSOrderedDescending;
+        }
+        else {
+            return NSOrderedAscending;
+        }
+    }];
+    //倒序删除对应indexPath数据
+    [sortResult enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSIndexPath *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.heightCache deleteRow:obj.row inSection:obj.section];
+    }];
+    [self see_deleteRowsAtIndexPaths:indexPaths withRowAnimation:animation];
+}
 
-    - (void)see_reloadData {
-        [self.heightCache reloadAll];
-        [self see_reloadData];
-    }
+- (void)see_reloadRowsAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths withRowAnimation:(UITableViewRowAnimation)animation {
+    [indexPaths enumerateObjectsUsingBlock:^(NSIndexPath * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.heightCache reloadRow:obj.row inSection:obj.section];
+    }];
+    [self see_reloadRowsAtIndexPaths:indexPaths withRowAnimation:animation];
+}
 
-    - (void)see_moveSection:(NSInteger)section toSection:(NSInteger)newSection {
-        [self.heightCache moveSection:section toSection:newSection];
-        [self see_moveSection:section toSection:newSection];
-    }
+- (void)see_reloadSections:(NSIndexSet *)sections withRowAnimation:(UITableViewRowAnimation)animation {
+    [sections enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.heightCache reloadSection:idx];
+    }];
+    [self see_reloadSections:sections withRowAnimation:animation];
+}
 
-    - (void)see_moveRowAtIndexPath:(NSIndexPath *)indexPath toIndexPath:(NSIndexPath *)newIndexPath {
-        [self.heightCache moveRow:indexPath.row inSection:indexPath.section toRow:newIndexPath.row inSection:newIndexPath.section];
-        [self see_moveRowAtIndexPath:indexPath toIndexPath:newIndexPath];
-    }
+- (void)see_reloadData {
+    [self.heightCache reloadAll];
+    [self see_reloadData];
+}
+
+- (void)see_moveSection:(NSInteger)section toSection:(NSInteger)newSection {
+    [self.heightCache moveSection:section toSection:newSection];
+    [self see_moveSection:section toSection:newSection];
+}
+
+- (void)see_moveRowAtIndexPath:(NSIndexPath *)indexPath toIndexPath:(NSIndexPath *)newIndexPath {
+    [self.heightCache moveRow:indexPath.row inSection:indexPath.section toRow:newIndexPath.row inSection:newIndexPath.section];
+    [self see_moveRowAtIndexPath:indexPath toIndexPath:newIndexPath];
+}
 
 #pragma mark getter & setter
 

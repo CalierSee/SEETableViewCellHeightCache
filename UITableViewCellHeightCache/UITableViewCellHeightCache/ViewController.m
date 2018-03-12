@@ -91,11 +91,11 @@
 }
 
 
-    - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-        return [tableView heightForCellWithIdentifier:@"cell" indexPath:indexPath configuration:^(UITableViewCell *cell) {
-            [(TableViewCell *)cell configureWithText:self.data[indexPath.section][indexPath.row]];
-        }];
-    }
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [tableView heightForCellWithIdentifier:@"cell" indexPath:indexPath configuration:^(UITableViewCell *cell) {
+        [(TableViewCell *)cell configureWithText:self.data[indexPath.section][indexPath.row]];
+    }];
+}
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     NSLog(@"%@",indexPath);
@@ -162,7 +162,7 @@
     NSInteger from = [self.tableView indexPathsForVisibleRows].firstObject.section;
     NSInteger to;
     do {
-       to = arc4random_uniform((uint32_t)self.data.count);
+        to = arc4random_uniform((uint32_t)self.data.count);
     }while (to == from);
     [self.tableView beginUpdates];
     NSMutableArray * target = [self.data objectAtIndex:from];
