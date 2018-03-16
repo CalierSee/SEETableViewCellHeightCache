@@ -13,7 +13,7 @@
 
 @property (nonatomic, strong,readonly) SEETableViewCellHeightCache * heightCache;
 
-- (void)cacheEnabled:(BOOL)enabled;
++ (void)cacheEnabled:(BOOL)enabled;
 
 - (CGFloat)heightForCellWithIdentifier:(NSString *)identifier indexPath:(NSIndexPath *)indexPath configuration:(void(^)(__kindof UITableViewCell * cell))configuration;
 

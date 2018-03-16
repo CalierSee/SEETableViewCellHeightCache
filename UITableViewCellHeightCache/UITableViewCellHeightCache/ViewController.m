@@ -23,7 +23,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self.tableView cacheEnabled:YES];
+    [UITableView cacheEnabled:YES];
     UIBarButtonItem * insertSection = [[UIBarButtonItem alloc]initWithTitle:@"添加组" style:UIBarButtonItemStyleDone target:self action:@selector(see_insertSection:)];
     UIBarButtonItem * deleteSection = [[UIBarButtonItem alloc]initWithTitle:@"删除组" style:UIBarButtonItemStyleDone target:self action:@selector(see_deleteSection:)];
     UIBarButtonItem * moveSection = [[UIBarButtonItem alloc]initWithTitle:@"移动组" style:UIBarButtonItemStyleDone target:self action:@selector(see_moveSection:)];

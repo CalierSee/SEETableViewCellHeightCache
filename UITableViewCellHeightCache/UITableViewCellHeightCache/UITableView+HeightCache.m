@@ -9,10 +9,10 @@
 #import "UITableView+HeightCache.h"
 #import <objc/runtime.h>
 
+static BOOL tableViewCacheEnabled = NO;
 
 static void * heightCacheKey = @"heightCache";
 static void * cellCacheKey = @"cellCache";
-static void * isCacheKey = @"isCache";
 
 @interface UITableView()
 
@@ -25,9 +25,9 @@ static void * isCacheKey = @"isCache";
 
 #pragma mark public method
 
-- (void)cacheEnabled:(BOOL)enabled {
-    if ([self isCache] == enabled) return;
-    [self setIsCache:enabled];
++ (void)cacheEnabled:(BOOL)enabled {
+    if (tableViewCacheEnabled == enabled) return;
+    tableViewCacheEnabled = enabled;
     //move
     Method m1 = class_getInstanceMethod([self class], @selector(moveRowAtIndexPath:toIndexPath:));
     Method m2 = class_getInstanceMethod([self class], @selector(see_moveRowAtIndexPath:toIndexPath:));
@@ -63,7 +63,7 @@ static void * isCacheKey = @"isCache";
 
 
 - (CGFloat)heightForCellWithIdentifier:(NSString *)identifier indexPath:(NSIndexPath *)indexPath configuration:(void (^)(__kindof UITableViewCell *))configuration {
-    if (![self isCache]) @throw [NSException exceptionWithName:@"高度返回错误" reason:@"无法再未开启缓存的情况下调用该方法 请使用 - (void)cacheEnabled:(BOOL)enabled 并设置enabled为YES" userInfo:nil];
+    if (!tableViewCacheEnabled) @throw [NSException exceptionWithName:@"高度返回错误" reason:@"无法再未开启缓存的情况下调用该方法 请使用 - (void)cacheEnabled:(BOOL)enabled 并设置enabled为YES" userInfo:nil];
     CGFloat height = 0;
     if (indexPath && identifier.length != 0) {
         //查找缓存
@@ -253,14 +253,6 @@ static void * isCacheKey = @"isCache";
     return objc_getAssociatedObject(self, heightCacheKey);
 }
 
-- (BOOL)isCache {
-    NSNumber * isCache = objc_getAssociatedObject(self, isCacheKey);
-    return isCache.boolValue;
-}
-
-- (void)setIsCache:(BOOL)isCache {
-    objc_setAssociatedObject(self, isCacheKey, @(isCache), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
 
 
 @end
