@@ -42,12 +42,13 @@
 @implementation SEETableViewCellHeightCache
 
 #pragma mark public method
+
 - (CGFloat)heightWithSection:(NSInteger)section row:(NSInteger)row {
     NSNumber * height = cacheValue(self.currentHeight,section, row);
     //返回缓存高度
     if (height) {
 #ifdef DEBUG
-        NSLog(@"缓存:%lf",height.CGFloatValue);
+        NSLog(@"%zd-%zd缓存:%lf",section,row,height.CGFloatValue);
 #endif
         return height.CGFloatValue;
     }

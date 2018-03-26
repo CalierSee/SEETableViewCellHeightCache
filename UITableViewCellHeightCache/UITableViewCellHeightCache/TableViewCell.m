@@ -34,7 +34,7 @@
 
 - (CGSize)sizeThatFits:(CGSize)size {
     CGSize sizes = CGSizeMake(size.width, 36 + [self.label sizeThatFits:size].height);
-    NSLog(@"%@",NSStringFromCGSize(sizes));
+//    NSLog(@"%@",NSStringFromCGSize(sizes));
     return sizes;
 }
 

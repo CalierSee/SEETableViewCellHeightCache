@@ -11,6 +11,7 @@
 
 @interface UITableView (HeightCache)
 
+
 @property (nonatomic, strong,readonly) SEETableViewCellHeightCache * heightCache;
 
 + (void)cacheEnabled:(BOOL)enabled;

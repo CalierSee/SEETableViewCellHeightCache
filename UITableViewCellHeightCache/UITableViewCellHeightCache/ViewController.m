@@ -29,9 +29,13 @@
     UIBarButtonItem * moveSection = [[UIBarButtonItem alloc]initWithTitle:@"移动组" style:UIBarButtonItemStyleDone target:self action:@selector(see_moveSection:)];
     UIBarButtonItem * reloadSection = [[UIBarButtonItem alloc]initWithTitle:@"刷新组" style:UIBarButtonItemStyleDone target:self action:@selector(see_reloadSection:)];
     UIBarButtonItem * editAction = [[UIBarButtonItem alloc]initWithTitle:@"编辑" style:UIBarButtonItemStyleDone target:self action:@selector(see_editAction:)];
-    self.navigationItem.leftBarButtonItems = @[insertSection,deleteSection,moveSection,reloadSection];
-    self.navigationItem.rightBarButtonItem = editAction;
+    self.navigationItem.rightBarButtonItems = @[insertSection,deleteSection,moveSection,reloadSection,editAction];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass([TableViewCell class]) bundle:nil] forCellReuseIdentifier:@"cell"];
+    
+}
+
+- (void)dealloc {
+    NSLog(@"dealloc");
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -99,6 +103,8 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     NSLog(@"%@",indexPath);
+    ViewController * vc = [[ViewController alloc]init];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)see_insertSection:(UIButton *)sender {
@@ -214,17 +220,13 @@
     if (_data == nil) {
         _data = [NSMutableArray <NSMutableArray *> array];
         NSMutableArray * array = [NSMutableArray array];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
-        [array addObject:[self see_createData]];
+        for (NSInteger i = 0; i < 1000; i++) {
+            [array addObject:[self see_createData]];
+        }
         [_data addObject:array];
     }
     return _data;
 }
+
+
 @end
