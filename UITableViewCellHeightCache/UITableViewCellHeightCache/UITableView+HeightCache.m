@@ -22,9 +22,6 @@ void runLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity a
         //获取当前需要计算的indexPath
         NSInteger section = (NSInteger)CFDictionaryGetValue(m_dict, "section");
         NSInteger row = (NSInteger)CFDictionaryGetValue(m_dict, "row");
-#ifdef DEBUG
-        NSLog(@"section: %zd,  row:%zd",section,row);
-#endif
         if (tableView.dataSource == nil) return;
         if (section < [tableView.dataSource numberOfSectionsInTableView:tableView]) {
             if (row < [tableView.dataSource tableView:tableView numberOfRowsInSection:section]) {

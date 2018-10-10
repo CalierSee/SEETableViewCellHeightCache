@@ -32,11 +32,20 @@
     self.navigationItem.rightBarButtonItems = @[insertSection,deleteSection,moveSection,reloadSection,editAction];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass([TableViewCell class]) bundle:nil] forCellReuseIdentifier:@"cell"];
     
+    self.tableView.rowHeight = 400;
+    
+    [self.tableView addObserver:self forKeyPath:@"bounds" options:NSKeyValueObservingOptionNew context:nil];
+    
 }
 
-- (void)dealloc {
-    NSLog(@"dealloc");
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if ([keyPath isEqualToString:@"bounds"]) {
+        NSLog(@"========%@",NSStringFromCGRect(self.tableView.bounds));
+    }
+    
 }
+
+
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return self.data.count;
@@ -47,6 +56,7 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSLog(@"cellForRowAtIndexPath   %@",indexPath);
     TableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
     
     [cell configureWithText:self.data[indexPath.section][indexPath.row]];
@@ -95,14 +105,16 @@
 }
 
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [tableView heightForCellWithIdentifier:@"cell" indexPath:indexPath configuration:^(UITableViewCell *cell) {
-        [(TableViewCell *)cell configureWithText:self.data[indexPath.section][indexPath.row]];
-    }];
-}
+//- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+//
+//    NSLog(@"heightForRowAtIndexPath   %@",indexPath);
+//    return 400;
+//    return [tableView heightForCellWithIdentifier:@"cell" indexPath:indexPath configuration:^(UITableViewCell *cell) {
+//        [(TableViewCell *)cell configureWithText:self.data[indexPath.section][indexPath.row]];
+//    }];
+//}
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"%@",indexPath);
     ViewController * vc = [[ViewController alloc]init];
     [self.navigationController pushViewController:vc animated:YES];
 }

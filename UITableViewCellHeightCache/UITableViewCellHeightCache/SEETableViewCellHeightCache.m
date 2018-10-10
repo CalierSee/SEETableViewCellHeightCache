@@ -47,9 +47,6 @@
     NSNumber * height = cacheValue(self.currentHeight,section, row);
     //返回缓存高度
     if (height) {
-#ifdef DEBUG
-        NSLog(@"%zd-%zd缓存:%lf",section,row,height.CGFloatValue);
-#endif
         return height.CGFloatValue;
     }
     else {
