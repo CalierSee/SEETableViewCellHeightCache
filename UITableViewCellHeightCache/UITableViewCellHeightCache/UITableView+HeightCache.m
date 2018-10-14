@@ -10,15 +10,32 @@
 #import <objc/runtime.h>
 
 static BOOL tableViewCacheEnabled = NO;
-static void * tableViewRunloopCacheEnabled = "runloopCacheEnabled";
+static void * tableViewRunloopObserver = "runloopObserver";
 static void * heightCacheKey = @"heightCache";
 static void * cellCacheKey = @"cellCache";
 
+
 void runLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
     if (activity == kCFRunLoopBeforeWaiting) {
+        static int failCount = 0;
         CFMutableDictionaryRef m_dict = info;
         //获取tableView
-        UITableView * tableView = (__bridge UITableView *)CFDictionaryGetValue(m_dict, "tableView");
+        UITableView * tableView;
+        const void * table = CFDictionaryGetValue(m_dict, "tableView");
+        if (table != NULL) {
+            tableView = (__bridge UITableView *)table;
+        }
+        else {
+            if (failCount > 10) {
+                CFRunLoopRemoveObserver(CFRunLoopGetCurrent(), observer, kCFRunLoopDefaultMode);
+                failCount = 0;
+            }
+            else {
+                
+                failCount += 1;
+                CFRunLoopWakeUp(CFRunLoopGetCurrent());
+            }
+        }
         //获取当前需要计算的indexPath
         NSInteger section = (NSInteger)CFDictionaryGetValue(m_dict, "section");
         NSInteger row = (NSInteger)CFDictionaryGetValue(m_dict, "row");
@@ -42,7 +59,6 @@ void runLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity a
         else {
             //高度缓存全部完成 将observer移除
             CFRunLoopRemoveObserver(CFRunLoopGetCurrent(), observer, kCFRunLoopDefaultMode);
-            objc_setAssociatedObject(tableView, tableViewRunloopCacheEnabled, @(NO), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         }
     }
 }
@@ -95,40 +111,41 @@ void runLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity a
 }
 
 
-    - (CGFloat)heightForCellWithIdentifier:(NSString *)identifier indexPath:(NSIndexPath *)indexPath configuration:(void (^)(__kindof UITableViewCell *))configuration {
-        if (!tableViewCacheEnabled) @throw [NSException exceptionWithName:@"高度返回错误" reason:@"无法再未开启缓存的情况下调用该方法 请使用 + (void)cacheEnabled:(BOOL)enabled 并设置enabled为YES" userInfo:nil];
-        CGFloat height = 0;
-        if (indexPath && identifier.length != 0) {
-            //查找缓存
-            height = [self.heightCache heightWithSection:indexPath.section row:indexPath.row];
-            //缓存没有则计算
-            if (height == CGFLOAT_MAX) {
-                height = [self see_calculateForCellWithIdentifier:identifier configuration:configuration];
-                [self.heightCache setHeight:height section:indexPath.section row:indexPath.row];
-                //添加observer 当runloop即将休眠时计算行高
-                if (((NSNumber *)objc_getAssociatedObject(self, tableViewRunloopCacheEnabled)).boolValue == NO){
-                    objc_setAssociatedObject(self, tableViewRunloopCacheEnabled, @(YES), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-                    //获取当前runloop
-                    CFRunLoopRef runloop = CFRunLoopGetCurrent();
-                    __weak typeof(self) weakSelf = self;
-                    //创建字典 记录当前tableView 以及缓存indexPath
-                    CFMutableDictionaryRef m_dict = CFDictionaryCreateMutable(NULL, 3, NULL, NULL);
-                    NSInteger section = indexPath.section;
-                    NSInteger row = indexPath.row;
-                    CFDictionaryAddValue(m_dict, "section", (const void *)section);
-                    CFDictionaryAddValue(m_dict, "row", (const void *)row);
-                    CFDictionaryAddValue(m_dict, "tableView", (__bridge void *)weakSelf);
-                    //创建context
-                    CFRunLoopObserverContext context = {.info = m_dict};
-                    //创建observer
-                    CFRunLoopObserverRef observer = CFRunLoopObserverCreate(NULL, kCFRunLoopBeforeWaiting, YES, 10, &runLoopObserverCallBack, &context);
-                    //添加observer 在runloop空闲时计算高度
-                    CFRunLoopAddObserver(runloop, observer, kCFRunLoopDefaultMode);
-                }
+- (CGFloat)heightForCellWithIdentifier:(NSString *)identifier indexPath:(NSIndexPath *)indexPath configuration:(void (^)(__kindof UITableViewCell *))configuration {
+    if (!tableViewCacheEnabled) @throw [NSException exceptionWithName:@"高度返回错误" reason:@"无法再未开启缓存的情况下调用该方法 请使用 + (void)cacheEnabled:(BOOL)enabled 并设置enabled为YES" userInfo:nil];
+    CGFloat height = 0;
+    if (indexPath && identifier.length != 0) {
+        //查找缓存
+        height = [self.heightCache heightWithSection:indexPath.section row:indexPath.row];
+        //缓存没有则计算
+        if (height == CGFLOAT_MAX) {
+            height = [self see_calculateForCellWithIdentifier:identifier configuration:configuration];
+            [self.heightCache setHeight:height section:indexPath.section row:indexPath.row];
+            //添加observer 当runloop即将休眠时计算行高
+            id observer = objc_getAssociatedObject(self, tableViewRunloopObserver);
+            if (!observer || !CFRunLoopObserverIsValid(((__bridge CFRunLoopObserverRef)observer))) {
+                //获取当前runloop
+                CFRunLoopRef runloop = CFRunLoopGetCurrent();
+                __weak typeof(self) weakSelf = self;
+                //创建字典 记录当前tableView 以及缓存indexPath
+                CFMutableDictionaryRef m_dict = CFDictionaryCreateMutable(NULL, 3, NULL, NULL);
+                NSInteger section = indexPath.section;
+                NSInteger row = indexPath.row;
+                CFDictionaryAddValue(m_dict, "section", (const void *)section);
+                CFDictionaryAddValue(m_dict, "row", (const void *)row);
+                CFDictionaryAddValue(m_dict, "tableView", (__bridge void *)weakSelf);
+                //创建context
+                CFRunLoopObserverContext context = {.info = m_dict};
+                //创建observer
+                CFRunLoopObserverRef observer = CFRunLoopObserverCreate(NULL, kCFRunLoopBeforeWaiting, YES, 10, &runLoopObserverCallBack, &context);
+                objc_setAssociatedObject(self, tableViewRunloopObserver, (__bridge id)observer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+                //添加observer 在runloop空闲时计算高度
+                CFRunLoopAddObserver(runloop, observer, kCFRunLoopDefaultMode);
             }
         }
-        return height;
     }
+    return height;
+}
 #pragma mark private method
 //计算高度
 - (CGFloat)see_calculateForCellWithIdentifier:(NSString *)identifier configuration:(void(^)(UITableViewCell * cell))configuration {
