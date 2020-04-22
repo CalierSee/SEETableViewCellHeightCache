@@ -110,6 +110,13 @@ void runLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity a
     method_exchangeImplementations(m1, m2);
 }
 
+- (void)dealloc {
+    CFRunLoopRef runloop = CFRunLoopGetCurrent();
+    if (CFRunLoopObserverIsValid((__bridge CFRunLoopObserverRef)objc_getAssociatedObject(self, tableViewRunloopObserver))) {
+        CFRunLoopRemoveObserver(runloop, (__bridge CFRunLoopObserverRef)objc_getAssociatedObject(self, tableViewRunloopObserver), kCFRunLoopDefaultMode);
+    }
+}
+
 
 - (CGFloat)heightForCellWithIdentifier:(NSString *)identifier indexPath:(NSIndexPath *)indexPath configuration:(void (^)(__kindof UITableViewCell *))configuration {
     if (!tableViewCacheEnabled) @throw [NSException exceptionWithName:@"高度返回错误" reason:@"无法再未开启缓存的情况下调用该方法 请使用 + (void)cacheEnabled:(BOOL)enabled 并设置enabled为YES" userInfo:nil];
